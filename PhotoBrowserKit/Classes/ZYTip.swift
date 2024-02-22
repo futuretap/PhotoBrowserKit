@@ -37,7 +37,7 @@ class ZYTip: NSObject {
     titleLabel.textAlignment = .center
     
     backView.transform = CGAffineTransform(translationX: 0 , y: -85 )
-    UIView.animate(withDuration: 0.8, delay: 0, usingSpringWithDamping: 0 , initialSpringVelocity: 0 , options: UIViewAnimationOptions.curveEaseInOut , animations: {
+	  UIView.animate(withDuration: 0.8, delay: 0, usingSpringWithDamping: 0 , initialSpringVelocity: 0 , options: .curveEaseInOut , animations: {
       self.backView.transform = CGAffineTransform.identity
     }, completion: nil)
     

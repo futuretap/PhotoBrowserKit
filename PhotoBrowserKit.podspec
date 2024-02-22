@@ -16,12 +16,12 @@ Pod::Spec.new do |s|
   s.author           = { 'smalldu' => '363958265@qq.com' }
   s.source           = { :git => 'https://github.com/smalldu/PhotoBrowserKit.git', :tag => s.version.to_s }
   # s.social_media_url = 'https://twitter.com/<TWITTER_USERNAME>'
-  s.ios.deployment_target = '8.0'
+  s.ios.deployment_target = '12.0'
   s.source_files = 'PhotoBrowserKit/Classes/**/*'
   # s.resource_bundles = {
   #   'PhotoBrowserKit' => ['PhotoBrowserKit/Assets/*.png']
   # }
 
   # s.public_header_files = 'Pod/Classes/**/*.h'
-  s.dependency 'Kingfisher'
+	s.dependency 'SDWebImage'
 end

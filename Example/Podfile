@@ -1,11 +1,11 @@
 use_frameworks!
+platform :ios, '12.0'
 
 target 'PhotoBrowserKit_Example' do
   pod 'PhotoBrowserKit', :path => '../'
 
   target 'PhotoBrowserKit_Tests' do
     inherit! :search_paths
-    pod 'Kingfisher'
-    
+		pod 'SDWebImage'
   end
 end

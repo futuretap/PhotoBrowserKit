@@ -8,15 +8,10 @@
 
 import UIKit
 
-public class ZYPhotoItem{
-  public var thunbImage: UIImage? // 缩略图
-  public var image: UIImage?
-  public var imageURL: URL?
-  public var finished: Bool = false
-  public var sourceView: UIView?
-  public init() {
-    
-  }
+@objc public class ZYPhotoItem: NSObject {
+	public var thumbImage: UIImage?
+	public var image: UIImage?
+	public var imageURL: URL?
+	public var finished: Bool = false
+	public var sourceView: UIView?
 }
-
-
