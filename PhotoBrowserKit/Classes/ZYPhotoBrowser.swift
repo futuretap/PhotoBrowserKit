@@ -57,7 +57,8 @@ import Photos
 	private var _presented = false
 	private var startLocation = CGPoint.zero
 	private var startFrame = CGRect.zero
-
+	private var rotationInProgress = false
+	
 	@objc public weak var delegate: ZYPhotoBrowserDelegate?
 
 	private var statusBarHidden = false {
@@ -90,6 +91,13 @@ import Photos
 		view.addSubview(pageControl)
 
 		layoutUI()
+		setupGestureRecognizers()
+
+		let contentOffset = CGPoint(x: scrollView.frame.width * CGFloat(currentPage), y: 0)
+		scrollView.setContentOffset(contentOffset, animated: false)
+		if contentOffset.x == 0 {
+			self.scrollViewDidScroll(scrollView)
+		}
 	}
 	
 	override public func viewWillAppear(_ animated: Bool) {
@@ -97,15 +105,50 @@ import Photos
 		willAppear()
 	}
 	
-	override public func viewDidLayoutSubviews() {
-		super.viewDidLayoutSubviews()
-		layoutUI()
-	}
+	public override func viewWillTransition(to size: CGSize, with coordinator: UIViewControllerTransitionCoordinator) {
+		super.viewWillTransition(to: size, with: coordinator)
+		
+		rotationInProgress = true
+		let page = currentPage
+		
+		for i in 0 ... self.photoItems.count - 1 where i != page {
+			if let photoView = self.photoViewForPage(i) {
+				photoView.isHidden = true
+			}
+		}
+		
+		coordinator.animate { [weak self] _ in
+			guard let self else { return }
+			self.layoutUI()
 
+			for i in 0 ... self.photoItems.count - 1 {
+				if let photoView = self.photoViewForPage(i) {
+					var rect = self.scrollView.bounds
+					rect.origin.x = CGFloat(i) * self.scrollView.bounds.width
+					photoView.frame = rect
+					photoView.resizeImageView()
+				}
+			}
+			
+			let contentOffset = CGPoint(x: self.scrollView.frame.width * CGFloat(page), y: 0)
+			self.scrollView.setContentOffset(contentOffset, animated: false)
+			if contentOffset.x == 0 {
+				self.scrollViewDidScroll(self.scrollView)
+			}
+		} completion: { [weak self] _ in
+			guard let self else { return }
+			for i in 0 ... self.photoItems.count - 1 {
+				if let photoView = self.photoViewForPage(i) {
+					photoView.isHidden = false
+					print ("showing \(i) \(photoView.tag)")
+				}
+			}
+			rotationInProgress = false
+		}
+	}
 
 // MARK: - setup ui
 	func layoutUI() {
-		
 		// layout scrollview
 		var rect = view.bounds
 		rect.origin.x -= ZYConstant.photoViewPadding
@@ -118,13 +161,6 @@ import Photos
 		pageControl.frame = CGRect(x: 0, y: rect.height - 40, width: view.bounds.width, height: 20)
 		pageControl.numberOfPages = photoItems.count
 		configLabelWithPage(currentPage)
-				
-		setupGestureRecognizers()
-		let contentOffset = CGPoint(x: scrollView.frame.width * CGFloat(currentPage), y: 0)
-		scrollView.setContentOffset(contentOffset, animated: false)
-		if contentOffset.x == 0 {
-			self.scrollViewDidScroll(scrollView)
-		}
 	}
 	
 	func reloadItems() {
@@ -161,8 +197,8 @@ import Photos
 		guard let item = item else { return }
 		guard let photoView = photoView else { return }
 		let endRect = photoView.imageView.frame
-		var sourceRect :CGRect = CGRect.zero
-		
+		var sourceRect: CGRect = CGRect.zero
+
 		if let superView = item.sourceView?.superview {
 			sourceRect = superView.convert(item.sourceView?.frame ?? CGRect.zero, to: photoView)
 			photoView.imageView.frame = sourceRect
@@ -171,7 +207,7 @@ import Photos
 		UIView.animate(withDuration: ZYConstant.springAnimationDuration , delay: 0, animations: {
 			photoView.imageView.frame = endRect
 			self.view.backgroundColor = UIColor.black
-		}) { (finished) in
+		}) { (_) in
 			photoView.setItem(item, determinate: true)
 			self._presented = true
 			self.statusBarHidden = true
@@ -215,8 +251,8 @@ extension ZYPhotoBrowser {
 		var viewsToRemove: [ZYPhotoView] = []
 
 		for photoView in visibleItemViews {
-			if photoView.frame.origin.x + photoView.frame.width < scrollView.contentOffset.x - scrollView.frame.width
-				|| photoView.frame.origin.x > scrollView.contentOffset.x + 2 * scrollView.frame.width {
+			if !rotationInProgress && (photoView.frame.origin.x + photoView.frame.width < scrollView.contentOffset.x - scrollView.frame.width
+				|| photoView.frame.origin.x > scrollView.contentOffset.x + 2 * scrollView.frame.width) {
 				photoView.removeFromSuperview()
 				photoView.setItem(nil, determinate: false)
 				viewsToRemove.append(photoView)
@@ -276,7 +312,7 @@ extension ZYPhotoBrowser {
 			}
 		}
 		
-		if page != currentPage && _presented && page>=0 && page<photoItems.count {
+		if !rotationInProgress && page != currentPage && _presented && page>=0 && page<photoItems.count {
 			let item = photoItems[page]
 			self.currentPage = page
 			self.configLabelWithPage(page)

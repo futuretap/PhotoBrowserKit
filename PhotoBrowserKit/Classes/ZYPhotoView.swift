@@ -90,19 +90,8 @@ class ZYPhotoView: UIScrollView {
 
 	func resizeImageView() {
 		if let image = imageView.image {
-			let imageSize = image.size
-			let width = imageView.frame.width
-			let height = width * (imageSize.height / imageSize.width)
-			let rect  = CGRect(x: 0, y: 0, width: width, height: height)
-			imageView.frame = rect
-
-			// If the picture is very high, only the upper part will be displayed
-			if height <= bounds.size.height {
-				imageView.center = CGPoint(x: bounds.size.width / 2, y: bounds.size.height / 2)
-			} else {
-				imageView.center = CGPoint(x: bounds.size.width / 2, y: height / 2)
-			}
-
+			imageView.frame = CGRect(origin: .zero, size: image.size.limiting(size: bounds.size))
+			imageView.center = CGPoint(x: bounds.size.width / 2, y: bounds.size.height / 2)
 		} else {
 			let width = frame.width - 2 * ZYConstant.photoViewPadding
 			imageView.frame = CGRect(x: 0, y: 0, width: width, height: width*2/3)
@@ -121,6 +110,19 @@ class ZYPhotoView: UIScrollView {
 			return true
 		}
 		return false
+	}
+}
+
+extension CGSize {
+	func limiting(size: CGSize) -> CGSize {
+		if height == 0 {
+			return self
+		}
+		let aspectRatio = width / height
+		let width = min(width, size.width)
+		let newHeight = min(width / aspectRatio, size.height)
+		let newWidth = newHeight * aspectRatio
+		return CGSizeMake(newWidth, newHeight)
 	}
 }
 
